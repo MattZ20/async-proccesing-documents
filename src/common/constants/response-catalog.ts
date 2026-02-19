@@ -35,4 +35,5 @@ export const RESPONSE_CATALOG = {
   },
 } as const;
 
-export type CatalogEntry = (typeof RESPONSE_CATALOG)[keyof typeof RESPONSE_CATALOG];
+export type CatalogEntry =
+  (typeof RESPONSE_CATALOG)[keyof typeof RESPONSE_CATALOG];

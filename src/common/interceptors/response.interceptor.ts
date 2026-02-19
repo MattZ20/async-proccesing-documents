@@ -10,9 +10,10 @@ import { Request } from 'express';
 import { StandardResponse } from '../interfaces/standard-response.interface.js';
 
 @Injectable()
-export class ResponseInterceptor<T>
-  implements NestInterceptor<T, StandardResponse<T>>
-{
+export class ResponseInterceptor<T> implements NestInterceptor<
+  T,
+  StandardResponse<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,

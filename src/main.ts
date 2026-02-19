@@ -19,10 +19,7 @@ async function bootstrap() {
     .setTitle('Document Processing API')
     .setDescription('API para procesamiento y validación de documentos')
     .setVersion('1.0')
-    .addApiKey(
-      { type: 'apiKey', name: 'x-api-key', in: 'header' },
-      'x-api-key',
-    )
+    .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'x-api-key')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

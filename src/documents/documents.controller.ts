@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApiBody,
   ApiConsumes,
   ApiOperation,
   ApiSecurity,
@@ -32,6 +33,35 @@ export class DocumentsController {
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({ summary: 'Subir documento para procesamiento' })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file', 'documentType'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Documento PDF o imagen (máx 5MB)',
+        },
+        documentType: {
+          type: 'string',
+          enum: ['invoice', 'contract', 'report', 'other'],
+          description: 'Tipo de documento',
+        },
+        description: {
+          type: 'string',
+          maxLength: 500,
+          description: 'Descripción del documento',
+        },
+        priority: {
+          type: 'string',
+          enum: ['low', 'normal', 'high'],
+          default: 'normal',
+          description: 'Prioridad del documento',
+        },
+      },
+    },
+  })
   @UseInterceptors(FileInterceptor('file'))
   uploadDocument(
     @UploadedFile(new FileSizeValidationPipe(), new FileTypeValidationPipe())

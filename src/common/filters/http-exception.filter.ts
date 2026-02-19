@@ -44,8 +44,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message =
           typeof exceptionResponse === 'string'
             ? exceptionResponse
-            : (exceptionResponse as { message?: string }).message ??
-              'Error desconocido';
+            : ((exceptionResponse as { message?: string }).message ??
+              'Error desconocido');
       }
     }
 

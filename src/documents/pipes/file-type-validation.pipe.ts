@@ -2,11 +2,7 @@ import { Injectable, PipeTransform } from '@nestjs/common';
 import { BusinessException } from '../../common/exceptions/business.exception.js';
 import { RESPONSE_CATALOG } from '../../common/constants/response-catalog.js';
 
-const ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'image/png',
-  'image/jpeg',
-];
+const ALLOWED_MIME_TYPES = ['application/pdf', 'image/png', 'image/jpeg'];
 
 @Injectable()
 export class FileTypeValidationPipe implements PipeTransform {
