@@ -6,14 +6,17 @@ export const RESPONSE_CATALOG = {
 
   // Validation error codes (2xxx)
   FILE_REQUIRED: { code: 2001, message: 'Archivo requerido' },
+  
   FILE_TYPE_NOT_ALLOWED: {
     code: 2002,
     message: 'Tipo de archivo no permitido. Use: pdf, png, jpg, jpeg',
   },
+
   FILE_SIZE_EXCEEDED: {
     code: 2003,
     message: 'Archivo excede tamaño máximo de 5MB',
   },
+
   VALIDATION_ERROR: {
     code: 2004,
     message: 'Error de validación de campos',
