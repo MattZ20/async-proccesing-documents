@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UploadedFile,
   UseGuards,
@@ -68,6 +70,12 @@ export class DocumentsController {
     file: Express.Multer.File,
     @Body() dto: UploadDocumentDto,
   ) {
-    return this.documentsService.processDocument(file, dto);
+    return this.documentsService.uploadDocument(file, dto);
+  }
+
+  @Get(':request_id/status')
+  @ApiOperation({ summary: 'Consultar estado del procesamiento' })
+  getStatus(@Param('request_id') requestId: string) {
+    return this.documentsService.getStatus(requestId);
   }
 }
