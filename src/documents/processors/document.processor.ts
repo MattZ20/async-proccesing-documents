@@ -66,4 +66,25 @@ export class DocumentProcessor extends WorkerHost {
 
     return metadata;
   }
+
+  onFailed(job: Job, error: Error): void {
+    const { requestId } = job.data as { requestId: string };
+
+    if (job.attemptsMade >= (job.opts.attempts ?? 3)) {
+      this.logger.error(
+        `Document ${requestId} failed permanently after ${job.attemptsMade} attempts: ${error.message}`,
+      );
+
+      this.storageService.update(requestId, {
+        status: 'ERROR',
+        error: error.message,
+        attempts: job.attemptsMade,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      this.logger.warn(
+        `Document ${requestId} failed attempt ${job.attemptsMade}, will retry`,
+      );
+    }
+  }
 }
