@@ -5,6 +5,13 @@
 /docs
 /test
 
+# Microservices
+api-gateway/node_modules
+api-gateway/dist
+ms-processor/node_modules
+ms-processor/dist
+shared/data/results.json
+
 
 # Logs
 logs
@@ -40,6 +47,7 @@ lerna-debug.log*
 
 # dotenv environment variable files
 .env
+.env.docker
 .env.development.local
 .env.test.local
 .env.production.local
