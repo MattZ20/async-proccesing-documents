@@ -1,32 +1,32 @@
 import { Controller, Get } from '@nestjs/common';
-import {
-  HealthCheck,
-  HealthCheckService,
-  MicroserviceHealthIndicator,
-} from '@nestjs/terminus';
 import { ConfigService } from '@nestjs/config';
-import { Transport } from '@nestjs/microservices';
+import Redis from 'ioredis';
 
 @Controller('health')
 export class HealthController {
-  constructor(
-    private readonly health: HealthCheckService,
-    private readonly microservice: MicroserviceHealthIndicator,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly configService: ConfigService) {}
 
   @Get()
-  @HealthCheck()
   async check() {
-    const redisHost = this.configService.get<string>('redis.host');
-    const redisPort = this.configService.get<number>('redis.port');
+    const redisHost = this.configService.get<string>('redis.host')!;
+    const redisPort = this.configService.get<number>('redis.port')!;
 
-    return this.health.check([
-      () =>
-        this.microservice.pingCheck('redis', {
-          transport: Transport.REDIS,
-          options: { host: redisHost, port: redisPort },
-        }),
-    ]);
+    let redisStatus = 'down';
+    try {
+      const redis = new Redis({ host: redisHost, port: redisPort, lazyConnect: true });
+      await redis.connect();
+      await redis.ping();
+      redisStatus = 'up';
+      await redis.quit();
+    } catch {
+      redisStatus = 'down';
+    }
+
+    return {
+      status: redisStatus === 'up' ? 'ok' : 'error',
+      checks: {
+        redis: { status: redisStatus },
+      },
+    };
   }
 }
