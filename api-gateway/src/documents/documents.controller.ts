@@ -1,0 +1,81 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiSecurity,
+  ApiTags,
+} from '@nestjs/swagger';
+import { DocumentsService } from './documents.service.js';
+import { UploadDocumentDto } from './dto/upload-document.dto.js';
+import { ApiKeyGuard } from './guards/api-key.guard.js';
+import { FileSizeValidationPipe } from './pipes/file-size-validation.pipe.js';
+import { FileTypeValidationPipe } from './pipes/file-type-validation.pipe.js';
+
+@ApiTags('Documents')
+@ApiSecurity('x-api-key')
+@Controller('documents')
+@UseGuards(ApiKeyGuard)
+export class DocumentsController {
+  constructor(private readonly documentsService: DocumentsService) {}
+
+  @Post('upload')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Subir documento para procesamiento' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file', 'documentType'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Documento PDF o imagen (máx 5MB)',
+        },
+        documentType: {
+          type: 'string',
+          enum: ['invoice', 'contract', 'report', 'other'],
+          description: 'Tipo de documento',
+        },
+        description: {
+          type: 'string',
+          maxLength: 500,
+          description: 'Descripción del documento',
+        },
+        priority: {
+          type: 'string',
+          enum: ['low', 'normal', 'high'],
+          default: 'normal',
+          description: 'Prioridad del documento',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  uploadDocument(
+    @UploadedFile(new FileSizeValidationPipe(), new FileTypeValidationPipe())
+    file: Express.Multer.File,
+    @Body() dto: UploadDocumentDto,
+  ) {
+    return this.documentsService.uploadDocument(file, dto);
+  }
+
+  @Get(':request_id/status')
+  @ApiOperation({ summary: 'Consultar estado del procesamiento' })
+  getStatus(@Param('request_id') requestId: string) {
+    return this.documentsService.getStatus(requestId);
+  }
+}
