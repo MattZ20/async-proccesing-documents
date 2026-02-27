@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { StorageService } from '../src/storage/storage.service';
 import { RESPONSE_CATALOG } from '../src/common/constants/response-catalog';
