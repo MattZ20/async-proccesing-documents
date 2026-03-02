@@ -44,6 +44,43 @@ describe('StorageService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('onModuleInit', () => {
+    it('should create directory and file when they do not exist', () => {
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      service.onModuleInit();
+
+      expect(fs.mkdirSync).toHaveBeenCalledWith(
+        expect.any(String),
+        { recursive: true },
+      );
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        mockFilePath,
+        JSON.stringify({}, null, 2),
+      );
+    });
+
+    it('should not overwrite file when it already exists', () => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.writeFileSync as jest.Mock).mockClear();
+
+      service.onModuleInit();
+
+      expect(fs.writeFileSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('readAll error handling', () => {
+    it('should return empty object when file read throws', () => {
+      (fs.readFileSync as jest.Mock).mockImplementation(() => {
+        throw new Error('disk error');
+      });
+
+      // findById internally calls readAll
+      expect(service.findById('any')).toBeUndefined();
+    });
+  });
+
   describe('create', () => {
     it('should create a new document record', () => {
       const mockRecord = {
