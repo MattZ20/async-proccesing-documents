@@ -8,8 +8,10 @@
 # Microservices
 api-gateway/node_modules
 api-gateway/dist
+api-gateway/coverage
 ms-processor/node_modules
 ms-processor/dist
+ms-processor/coverage
 shared/data/results.json
 
 

@@ -8,6 +8,8 @@ describe('DocumentProcessor', () => {
   let storageService: StorageService;
 
   beforeEach(async () => {
+    jest.useFakeTimers();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DocumentProcessor,
@@ -40,10 +42,13 @@ describe('DocumentProcessor', () => {
         attemptsMade: 0,
       } as Job;
 
-      // Mock Math.random para que siempre tenga éxito (> 0.8)
+      // Math.random: primera llamada controla el delay (cualquier valor),
+      // segunda llamada controla éxito/fallo: >= 0.8 => éxito
       jest.spyOn(Math, 'random').mockReturnValue(0.9);
 
-      await processor.process(mockJob);
+      const processPromise = processor.process(mockJob);
+      await jest.runAllTimersAsync();
+      await processPromise;
 
       expect(storageService.update).toHaveBeenCalledWith(
         'test-123',
@@ -64,10 +69,12 @@ describe('DocumentProcessor', () => {
         attemptsMade: 0,
       } as Job;
 
-      // Mock para éxito
+      // >= 0.8 => éxito
       jest.spyOn(Math, 'random').mockReturnValue(0.9);
 
-      const result = await processor.process(mockJob);
+      const processPromise = processor.process(mockJob);
+      await jest.runAllTimersAsync();
+      const result = await processPromise;
 
       expect(result).toHaveProperty('pages');
       expect(result).toHaveProperty('fileSize');
@@ -94,12 +101,15 @@ describe('DocumentProcessor', () => {
         attemptsMade: 1,
       } as Job;
 
-      // Mock para fallo
+      // < 0.8 => fallo
       jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
-      await expect(processor.process(mockJob)).rejects.toThrow(
-        'Simulated processing failure',
-      );
+      const processPromise = processor.process(mockJob).catch((e) => e);
+      await jest.runAllTimersAsync();
+      const result = await processPromise;
+
+      expect(result).toBeInstanceOf(Error);
+      expect(result.message).toBe('Simulated processing failure');
 
       expect(storageService.update).toHaveBeenCalledWith(
         'test-123',
@@ -153,6 +163,7 @@ describe('DocumentProcessor', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
   });
 });
