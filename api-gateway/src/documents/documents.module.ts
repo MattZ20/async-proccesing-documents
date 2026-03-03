@@ -5,9 +5,10 @@ import { DocumentsService } from './documents.service.js';
 
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: 'document-processing',
-    }),
+    BullModule.registerQueue(
+      { name: 'document-processing' },
+      { name: 'document-processing-dlq' },
+    ),
   ],
   controllers: [DocumentsController],
   providers: [DocumentsService],

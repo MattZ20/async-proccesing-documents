@@ -1,6 +1,6 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 import { StorageService } from '../storage/storage.service.js';
 import { DocumentMetadata } from '../common/interfaces/document-record.interface.js';
 
@@ -8,7 +8,10 @@ import { DocumentMetadata } from '../common/interfaces/document-record.interface
 export class DocumentProcessor extends WorkerHost {
   private readonly logger = new Logger(DocumentProcessor.name);
 
-  constructor(private readonly storageService: StorageService) {
+  constructor(
+    private readonly storageService: StorageService,
+    @InjectQueue('document-processing-dlq') private readonly dlqQueue: Queue,
+  ) {
     super();
   }
 
@@ -72,14 +75,15 @@ export class DocumentProcessor extends WorkerHost {
 
     if (job.attemptsMade >= (job.opts.attempts ?? 3)) {
       this.logger.error(
-        `Document ${requestId} failed permanently after ${job.attemptsMade} attempts: ${error.message}`,
+        `Document ${requestId} failed permanently after ${job.attemptsMade} attempts, sending to DLQ`,
       );
 
-      this.storageService.update(requestId, {
-        status: 'ERROR',
-        error: error.message,
-        attempts: job.attemptsMade,
-        updatedAt: new Date().toISOString(),
+      void this.dlqQueue.add('dead-letter', {
+        requestId,
+        originalError: error.message,
+        originalAttempts: job.attemptsMade,
+        originalJobData: job.data,
+        failedAt: new Date().toISOString(),
       });
     } else {
       this.logger.warn(

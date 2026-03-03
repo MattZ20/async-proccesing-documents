@@ -40,8 +40,9 @@ async function bootstrap() {
   serverAdapter.setBasePath('/admin/queues');
 
   const documentQueue = app.get<Queue>(getQueueToken('document-processing'));
+  const dlqQueue = app.get<Queue>(getQueueToken('document-processing-dlq'));
   createBullBoard({
-    queues: [new BullMQAdapter(documentQueue)],
+    queues: [new BullMQAdapter(documentQueue), new BullMQAdapter(dlqQueue)],
     serverAdapter,
   });
 

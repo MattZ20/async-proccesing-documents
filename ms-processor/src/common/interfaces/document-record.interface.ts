@@ -3,7 +3,8 @@ export type DocumentStatus =
   | 'PROCESSING'
   | 'COMPLETED'
   | 'RETRYING'
-  | 'ERROR';
+  | 'ERROR'
+  | 'DEAD_LETTER';
 
 export interface DocumentMetadata {
   pages: number;

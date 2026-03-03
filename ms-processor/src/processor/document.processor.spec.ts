@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getQueueToken } from '@nestjs/bullmq';
 import { DocumentProcessor } from './document.processor';
 import { StorageService } from '../storage/storage.service';
 import { Job } from 'bullmq';
@@ -6,18 +7,23 @@ import { Job } from 'bullmq';
 describe('DocumentProcessor', () => {
   let processor: DocumentProcessor;
   let storageService: StorageService;
+  let mockDlqQueue: { add: jest.Mock };
 
   beforeEach(async () => {
     jest.useFakeTimers();
+
+    mockDlqQueue = { add: jest.fn().mockResolvedValue({}) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DocumentProcessor,
         {
           provide: StorageService,
-          useValue: {
-            update: jest.fn(),
-          },
+          useValue: { update: jest.fn() },
+        },
+        {
+          provide: getQueueToken('document-processing-dlq'),
+          useValue: mockDlqQueue,
         },
       ],
     }).compile();
@@ -122,43 +128,35 @@ describe('DocumentProcessor', () => {
   });
 
   describe('onFailed', () => {
-    it('should mark as ERROR when max attempts reached', () => {
+    it('should enqueue to DLQ when max attempts reached', () => {
       const mockJob = {
         data: { requestId: 'test-123' },
         attemptsMade: 3,
         opts: { attempts: 3 },
       } as Job;
 
-      const error = new Error('Test error');
+      processor.onFailed(mockJob, new Error('Test error'));
 
-      processor.onFailed(mockJob, error);
-
-      expect(storageService.update).toHaveBeenCalledWith(
-        'test-123',
+      expect(mockDlqQueue.add).toHaveBeenCalledWith(
+        'dead-letter',
         expect.objectContaining({
-          status: 'ERROR',
-          error: 'Test error',
-          attempts: 3,
+          requestId: 'test-123',
+          originalError: 'Test error',
+          originalAttempts: 3,
         }),
       );
     });
 
-    it('should not mark as ERROR when attempts remain', () => {
+    it('should not enqueue to DLQ when attempts remain', () => {
       const mockJob = {
         data: { requestId: 'test-123' },
         attemptsMade: 1,
         opts: { attempts: 3 },
       } as Job;
 
-      const error = new Error('Test error');
+      processor.onFailed(mockJob, new Error('Test error'));
 
-      processor.onFailed(mockJob, error);
-
-      // No debería llamar a update con status ERROR
-      expect(storageService.update).not.toHaveBeenCalledWith(
-        'test-123',
-        expect.objectContaining({ status: 'ERROR' }),
-      );
+      expect(mockDlqQueue.add).not.toHaveBeenCalled();
     });
   });
 
