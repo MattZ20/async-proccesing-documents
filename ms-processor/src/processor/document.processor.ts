@@ -36,7 +36,7 @@ export class DocumentProcessor extends WorkerHost {
     await new Promise((resolve) => setTimeout(resolve, delay));
 
     // 3. Simulate random failure (~20% chance) for retry testing
-    if (Math.random() < 0.8) {
+    if (Math.random() < 0.2) {
       this.logger.warn(`Simulated failure for document ${requestId}`);
 
       this.storageService.update(requestId, {

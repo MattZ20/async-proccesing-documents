@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { timingSafeEqual } from 'crypto';
 import { BusinessException } from '../../common/exceptions/business.exception.js';
 import { RESPONSE_CATALOG } from '../../common/constants/response-catalog.js';
 
@@ -16,12 +17,23 @@ export class ApiKeyGuard implements CanActivate {
       throw new BusinessException(RESPONSE_CATALOG.API_KEY_REQUIRED, 401);
     }
 
-    const validApiKey = this.configService.get<string>('apiKey');
+    const validApiKey = this.configService.get<string>('apiKey')!;
 
-    if (apiKey !== validApiKey) {
+    if (!this.isValidKey(apiKey, validApiKey)) {
       throw new BusinessException(RESPONSE_CATALOG.API_KEY_INVALID, 401);
     }
 
     return true;
+  }
+
+  private isValidKey(provided: string, expected: string): boolean {
+    const providedBuffer = Buffer.from(provided);
+    const expectedBuffer = Buffer.from(expected);
+
+    if (providedBuffer.length !== expectedBuffer.length) {
+      return false;
+    }
+
+    return timingSafeEqual(providedBuffer, expectedBuffer);
   }
 }

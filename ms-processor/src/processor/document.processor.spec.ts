@@ -49,7 +49,7 @@ describe('DocumentProcessor', () => {
       } as Job;
 
       // Math.random: primera llamada controla el delay (cualquier valor),
-      // segunda llamada controla éxito/fallo: >= 0.8 => éxito
+      // segunda llamada controla éxito/fallo: >= 0.2 => éxito
       jest.spyOn(Math, 'random').mockReturnValue(0.9);
 
       const processPromise = processor.process(mockJob);
@@ -75,7 +75,7 @@ describe('DocumentProcessor', () => {
         attemptsMade: 0,
       } as Job;
 
-      // >= 0.8 => éxito
+      // >= 0.2 => éxito
       jest.spyOn(Math, 'random').mockReturnValue(0.9);
 
       const processPromise = processor.process(mockJob);
@@ -107,8 +107,8 @@ describe('DocumentProcessor', () => {
         attemptsMade: 1,
       } as Job;
 
-      // < 0.8 => fallo
-      jest.spyOn(Math, 'random').mockReturnValue(0.5);
+      // < 0.2 => fallo
+      jest.spyOn(Math, 'random').mockReturnValue(0.1);
 
       const processPromise = processor.process(mockJob).catch((e) => e);
       await jest.runAllTimersAsync();
